@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}ER-Diagram{% endblock %}
+{% block body %}
+<h1>🧩 ER-Diagram ของระบบ SAMS (3NF · 10 ตาราง)</h1>
+<div class="card tw">
+<pre class="mermaid">
+erDiagram
+    ACADEMIC_YEAR ||--o{ ACTIVITY : "มี"
+    ACTIVITY_TYPE ||--o{ ACTIVITY : "จัดประเภท"
+    ACTIVITY ||--o{ ACTIVITY_TEACHER : "มีครูดูแล"
+    TEACHER ||--o{ ACTIVITY_TEACHER : "ดูแล"
+    ACTIVITY ||--o{ REGISTRATION : "มีผู้ลงทะเบียน"
+    STUDENT ||--o{ REGISTRATION : "ลงทะเบียน"
+    REGISTRATION ||--o| ATTENDANCE : "มีผลเข้าร่วม"
+    ROLE ||--o{ USER_ACCOUNT : "กำหนดสิทธิ์"
+    STUDENT |o--o| USER_ACCOUNT : "มีบัญชี"
+    TEACHER |o--o| USER_ACCOUNT : "มีบัญชี"
+    ACADEMIC_YEAR { int year_id PK
+        string year_name
+        int semester }
+    ACTIVITY_TYPE { int type_id PK
+        string type_name }
+    ACTIVITY { int activity_id PK
+        int type_id FK
+        int year_id FK
+        string activity_name
+        string location
+        date activity_date
+        time start_time
+        time end_time
+        int max_participants
+        float hours }
+    TEACHER { int teacher_id PK
+        string teacher_name
+        string department
+        string phone }
+    ACTIVITY_TEACHER { int activity_id PK
+        int teacher_id PK
+        string duty }
+    STUDENT { int student_id PK
+        string first_name
+        string last_name
+        string grade
+        string room }
+    REGISTRATION { int reg_id PK
+        int activity_id FK
+        int student_id FK
+        datetime reg_date
+        string reg_status }
+    ATTENDANCE { int attendance_id PK
+        int reg_id FK
+        time check_in_time
+        string attend_status
+        float score
+        float hours_earned
+        string comment }
+    ROLE { int role_id PK
+        string role_name }
+    USER_ACCOUNT { int user_id PK
+        int role_id FK
+        int student_id FK
+        int teacher_id FK
+        string username
+        string password }
+</pre>
+</div>
+<p class="mute">สัญลักษณ์: <code>||</code> = หนึ่งเดียว, <code>o{</code> = ศูนย์หรือหลาย, <code>o|</code> = ศูนย์หรือหนึ่ง (ต้องต่ออินเทอร์เน็ตเพื่อโหลดตัวแสดงผลแผนภาพ)</p>
+<script type="module">
+import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+mermaid.initialize({startOnLoad:true});
+</script>
+{% endblock %}

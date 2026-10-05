@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}เข้าสู่ระบบ{% endblock %}
+{% block public %}
+<div class="loginpg">
+  <div class="lhero">
+    <h1>ยินดีต้อนรับสู่ SAMS 🎓</h1>
+    <p>ระบบจัดการและเช็คกิจกรรมนักเรียน ลงทะเบียนง่าย เช็คชื่อไว ชั่วโมงสะสมให้อัตโนมัติ</p>
+    <ul>
+      <li>📝 ลงทะเบียนกิจกรรมได้ในคลิกเดียว</li>
+      <li>✅ ครูเช็คชื่อและให้คะแนนได้ทันที</li>
+      <li>⏱️ สะสมชั่วโมงกิจกรรมอัตโนมัติ ดูย้อนหลังได้</li>
+    </ul>
+  </div>
+  <div class="lform"><div class="lbox">
+    <h2>เข้าสู่ระบบ</h2>
+    <p class="mute" style="margin-top:0">เลือกบัญชีทดลองด้านล่างเพื่อกรอกให้อัตโนมัติ</p>
+    <div class="demo">
+      <button type="button" onclick="fill('student1','student123')"><span>🧑‍🎓</span>นักเรียน</button>
+      <button type="button" onclick="fill('teacher1','teacher123')"><span>👩‍🏫</span>ครู</button>
+      <button type="button" onclick="fill('admin','admin123')"><span>🛠️</span>ผู้ดูแล</button>
+    </div>
+    <form method="post" style="margin-top:16px">
+      <label>ชื่อผู้ใช้</label><input id="u" name="username" required autofocus style="width:100%" placeholder="เช่น student1">
+      <label style="margin-top:14px">รหัสผ่าน</label><input id="p" name="password" type="password" required style="width:100%" placeholder="••••••••">
+      <p><button class="btn lg" style="width:100%;justify-content:center">เข้าสู่ระบบ →</button></p>
+    </form>
+  </div></div>
+</div>
+<script>function fill(u,p){document.getElementById('u').value=u;document.getElementById('p').value=p}</script>
+{% endblock %}

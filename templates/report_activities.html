@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}รายงานกิจกรรม{% endblock %}
+{% block body %}
+<div class="row" style="justify-content:space-between"><h1>📊 รายงานสรุปกิจกรรมและสถิติการเข้าร่วม</h1><button class="btn sec" onclick="window.print()">🖨️ พิมพ์</button></div>
+<div class="card tw"><table>
+  <tr><th>กิจกรรม</th><th>ประเภท</th><th>วันที่</th><th>ลงทะเบียน</th><th>มา</th><th>สาย</th><th>ขาด</th><th>ลา</th><th>อัตราเข้าร่วม</th><th>ชั่วโมงรวม</th></tr>
+  {% for r in rows %}<tr>
+    <td><a href="{{ url_for('activity_detail', aid=r.activity_id) }}">{{ r.activity_name }}</a></td>
+    <td>{{ r.type_name }}</td><td>{{ r.activity_date }}</td><td>{{ r.registered }}/{{ r.max_participants }}</td>
+    <td>{{ r.present }}</td><td>{{ r.late }}</td><td>{{ r.absent }}</td><td>{{ r.excused }}</td>
+    <td>{% if r.registered %}{{ '%.0f'|format((r.present + r.late) * 100 / r.registered) }}%{% else %}-{% endif %}</td>
+    <td>{{ r.hours }}</td></tr>{% endfor %}
+</table></div>
+<div class="card"><h2>🏷️ สรุปตามประเภทกิจกรรม</h2>
+  <table><tr><th>ประเภท</th><th>จำนวนกิจกรรม</th><th>การลงทะเบียนรวม</th></tr>
+  {% for t in bytype %}<tr><td>{{ t.type_name }}</td><td>{{ t.acts }}</td><td>{{ t.regs }}</td></tr>{% endfor %}</table></div>
+{% endblock %}

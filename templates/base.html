@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}SAMS{% endblock %} · SAMS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+{% macro item(ep, icon, text, kind=None) %}
+  {% set href = url_for(ep, kind=kind) if kind else url_for(ep) %}
+  <a class="nav {{ 'on' if request.path == href }}" href="{{ href }}"><span>{{ icon }}</span>{{ text }}</a>
+{% endmacro %}
+{% if g.user %}
+<div class="topbar"><button onclick="document.getElementById('side').classList.toggle('open')">☰</button><b>🏫 SAMS</b></div>
+<div class="shell">
+<aside class="side" id="side">
+  <div class="logo"><i>🏫</i><div>SAMS<small>ระบบกิจกรรมนักเรียน</small></div></div>
+  <div class="grp">เมนูหลัก</div>
+  {{ item('dashboard', '🏠', 'หน้าแรก') }}
+  {{ item('activities', '📅', 'กิจกรรมทั้งหมด') }}
+  {% if g.user.role_name == 'student' %}{{ item('my_history', '🏅', 'ประวัติของฉัน') }}{% endif %}
+  {% if g.user.role_name in ('admin','teacher') %}
+    <div class="grp">รายงาน</div>
+    {{ item('report_activities', '📊', 'สรุปกิจกรรม') }}
+    {{ item('report_students', '🎯', 'ชั่วโมงนักเรียน') }}
+  {% endif %}
+  {% if g.user.role_name == 'admin' %}
+    <div class="grp">ผู้ดูแลระบบ</div>
+    {{ item('master', '🏷️', 'ประเภทกิจกรรม', 'types') }}
+    {{ item('master', '🗓️', 'ปีการศึกษา', 'years') }}
+    {{ item('master', '👩‍🏫', 'ครู', 'teachers') }}
+    {{ item('master', '🧑‍🎓', 'นักเรียน', 'students') }}
+    {{ item('users', '🔑', 'ผู้ใช้และสิทธิ์') }}
+  {% endif %}
+  <div class="grp">อื่น ๆ</div>
+  {{ item('er', '🧩', 'ER-Diagram') }}
+  <div class="me">
+    <div class="av">{{ (g.user.display_name or g.user.username)[0]|upper }}</div>
+    <div><b>{{ g.user.display_name or g.user.username }}</b><small>{{ {'admin':'ผู้ดูแลระบบ','teacher':'ครูผู้ดูแล','student':'นักเรียน'}[g.user.role_name] }}</small></div>
+    <a href="{{ url_for('logout') }}">ออก</a>
+  </div>
+</aside>
+<div class="main"><div class="wrap">
+  {% for cat, msg in get_flashed_messages(with_categories=true) %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+  {% block body %}{% endblock %}
+</div></div>
+</div>
+{% else %}
+  {% for cat, msg in get_flashed_messages(with_categories=true) %}<div class="flash {{ cat }}" style="margin:16px">{{ msg }}</div>{% endfor %}
+  {% block public %}{% endblock %}
+{% endif %}
+</body>
+</html>

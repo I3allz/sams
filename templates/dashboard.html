@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}หน้าแรก{% endblock %}
+{% block body %}
+{% set role = g.user.role_name %}
+<div class="hero">
+  <h1>สวัสดี {{ g.user.display_name }} 👋</h1>
+  {% if role == 'student' %}
+    <p>ตอนนี้คุณสะสมได้ <b>{{ tot.h }}</b> ชั่วโมง จาก <b>{{ tot.n }}</b> กิจกรรม · คะแนนจิตพิสัย <b>{{ tot.sc }}</b></p>
+    <div class="row"><a class="btn" href="{{ url_for('activities') }}">🔍 หากิจกรรมลงทะเบียน</a><a class="btn sec" href="{{ url_for('my_history') }}">🏅 ดูประวัติของฉัน</a></div>
+  {% elif role == 'teacher' %}
+    <p>พร้อมจัดกิจกรรมและเช็คชื่อนักเรียนวันนี้แล้ว</p>
+    <div class="row"><a class="btn" href="{{ url_for('activity_new') }}">＋ สร้างกิจกรรมใหม่</a><a class="btn sec" href="{{ url_for('activities') }}">📅 ดูกิจกรรมทั้งหมด</a></div>
+  {% else %}
+    <p>ภาพรวมระบบกิจกรรมของโรงเรียน</p>
+    <div class="row"><a class="btn" href="{{ url_for('activity_new') }}">＋ สร้างกิจกรรม</a><a class="btn sec" href="{{ url_for('users') }}">🔑 จัดการผู้ใช้</a></div>
+  {% endif %}
+</div>
+
+{% if role == 'student' %}
+<div class="card"><h2>📌 กิจกรรมที่ฉันลงทะเบียนไว้ (ที่ยังไม่ถึง)</h2>
+  {% for a in mine %}
+  <div class="row" style="padding:10px 0;border-bottom:1px solid var(--line)">
+    <span class="tag">{{ a.activity_date }}</span><a href="{{ url_for('activity_detail', aid=a.activity_id) }}"><b>{{ a.activity_name }}</b></a>
+    <span class="mute">⏰ {{ a.start_time }} · 📍 {{ a.location }}</span></div>
+  {% else %}<div class="empty"><b>🗓️</b>ยังไม่มีกิจกรรมที่รออยู่ — ไปเลือกลงทะเบียนกันเลย!</div>{% endfor %}
+</div>
+<div class="card"><h2>🧭 วิธีใช้งาน</h2><div class="steps">
+  <div><b>1</b>เปิดเมนู "กิจกรรมทั้งหมด"</div><div><b>2</b>กดปุ่ม "ลงทะเบียน" ที่กิจกรรมที่สนใจ</div>
+  <div><b>3</b>ไปร่วมกิจกรรมและให้ครูเช็คชื่อ</div><div><b>4</b>ดูชั่วโมงสะสมที่ "ประวัติของฉัน"</div></div></div>
+{% else %}
+<div class="grid g4" style="margin-bottom:20px">
+  <div class="stat"><div class="ic">📅</div><div><b id="s-activities">{{ s.activities }}</b><span>กิจกรรมทั้งหมด</span></div></div>
+  <div class="stat"><div class="ic">🧑‍🎓</div><div><b id="s-students">{{ s.students }}</b><span>นักเรียน</span></div></div>
+  <div class="stat"><div class="ic">📝</div><div><b id="s-registrations">{{ s.registrations }}</b><span>การลงทะเบียน</span></div></div>
+  <div class="stat"><div class="ic">✅</div><div><b id="s-checkins">{{ s.checkins }}</b><span>เข้าร่วมแล้ว (มา/สาย)</span></div></div>
+  <div class="stat"><div class="ic">⏱️</div><div><b id="s-total_hours">{{ s.total_hours }}</b><span>ชั่วโมงสะสมรวม</span></div></div>
+</div>
+<div class="grid g2">
+  <div class="card">
+    <h2>📆 กิจกรรมที่กำลังจะมาถึง</h2>
+    <table>
+      <tr><th>กิจกรรม</th><th>วันที่</th><th>ลงทะเบียน</th></tr>
+      {% for a in upcoming %}
+      <tr><td><a href="{{ url_for('activity_detail', aid=a.activity_id) }}"><b>{{ a.activity_name }}</b></a><br><span class="tag">{{ a.type_name }}</span></td>
+          <td>{{ a.activity_date }}</td><td>{{ a.joined }}/{{ a.max_participants }}</td></tr>
+      {% else %}<tr><td colspan="3" class="mute">ไม่มีกิจกรรมที่กำลังจะมาถึง</td></tr>{% endfor %}
+    </table>
+  </div>
+  <div class="card">
+    <h2><span class="live"></span> เช็คชื่อล่าสุด <small class="mute" style="font-weight:400">อัปเดตอัตโนมัติ</small></h2>
+    <table id="recent">
+      <tr><th>นักเรียน</th><th>กิจกรรม</th><th>สถานะ</th></tr>
+      {% for r in s.recent %}
+      <tr><td>{{ r.student }}</td><td>{{ r.activity_name }}</td><td><span class="tag {{ r.attend_status }}">{{ ATTEND_LABEL[r.attend_status] }}</span></td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+<script>
+const labels = {{ ATTEND_LABEL|tojson }};
+async function refresh(){
+  try{
+    const d = await (await fetch('{{ url_for("api_stats") }}')).json();
+    for (const k of ['activities','students','registrations','checkins','total_hours'])
+      document.getElementById('s-'+k).textContent = d[k];
+    const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    document.getElementById('recent').innerHTML = '<tr><th>นักเรียน</th><th>กิจกรรม</th><th>สถานะ</th></tr>' +
+      d.recent.map(r => `<tr><td>${esc(r.student)}</td><td>${esc(r.activity_name)}</td>
+      <td><span class="tag ${esc(r.attend_status)}">${labels[r.attend_status]}</span></td></tr>`).join('');
+  }catch(e){}
+}
+setInterval(refresh, 5000);
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}กิจกรรม{% endblock %}
+{% block body %}
+<div class="ph">
+  <div><h1>📅 กิจกรรมทั้งหมด</h1><p>{% if g.user.role_name == 'student' %}เลือกกิจกรรมที่สนใจแล้วกด "ลงทะเบียน" ได้เลย{% else %}จัดการกิจกรรมและดูผู้เข้าร่วม{% endif %}</p></div>
+  {% if g.user.role_name in ('admin','teacher') %}<a class="btn lg" href="{{ url_for('activity_new') }}">＋ เพิ่มกิจกรรม</a>{% endif %}
+</div>
+<form class="bar" method="get">
+  <div class="grow"><label>🔍 ค้นหา</label><input name="q" value="{{ kw }}" placeholder="พิมพ์ชื่อกิจกรรม..."></div>
+  <div><label>ประเภท</label><select name="type" onchange="this.form.submit()"><option value="">ทั้งหมด</option>
+    {% for t in types %}<option value="{{ t.type_id }}" {{ 'selected' if t.type_id|string == type_id }}>{{ t.type_name }}</option>{% endfor %}</select></div>
+  <button class="btn">ค้นหา</button>
+</form>
+
+{% if not rows %}<div class="card empty"><b>🔎</b>ไม่พบกิจกรรมที่ค้นหา</div>{% endif %}
+<div class="grid g3">
+{% for a in rows %}
+  {% set pct = (a.joined * 100 / a.max_participants)|round|int if a.max_participants else 0 %}
+  <div class="acard t{{ a.type_id % 6 }}">
+    <div class="head">
+      <div class="date"><b>{{ a.activity_date[8:10] }}</b><small>{{ a.activity_date[5:7] }}/{{ a.activity_date[2:4] }}</small></div>
+      <div><h3><a href="{{ url_for('activity_detail', aid=a.activity_id) }}">{{ a.activity_name }}</a></h3>
+        <span class="tag">{{ a.type_name }}</span>
+        {% if a.activity_date < today %}<span class="tag">สิ้นสุดแล้ว</span>{% elif a.activity_date == today %}<span class="tag late">วันนี้</span>{% endif %}</div>
+    </div>
+    <div class="body">
+      <div>⏰ {{ a.start_time }}–{{ a.end_time }}</div>
+      <div>📍 {{ a.location }}</div>
+      <div>⏱️ ได้ {{ a.hours }} ชั่วโมง</div>
+      <div><span class="mute">ผู้ลงทะเบียน {{ a.joined }}/{{ a.max_participants }}</span>
+        <div class="seat {{ 'full' if pct >= 100 }}"><i style="width:{{ [pct,100]|min }}%"></i></div></div>
+    </div>
+    <div class="foot">
+      <a href="{{ url_for('activity_detail', aid=a.activity_id) }}">รายละเอียด →</a>
+      {% if g.user.role_name == 'student' %}
+        {% if a.activity_id in mine %}
+          <form class="inline row" method="post" action="{{ url_for('cancel', aid=a.activity_id) }}"><span class="tag registered">✓ ลงทะเบียนแล้ว</span><button class="btn red sm">ยกเลิก</button></form>
+        {% elif a.activity_date < today %}<span class="mute">ปิดรับแล้ว</span>
+        {% elif a.joined >= a.max_participants %}<span class="tag absent">เต็มแล้ว</span>
+        {% else %}<form class="inline" method="post" action="{{ url_for('register', aid=a.activity_id) }}"><button class="btn">ลงทะเบียน</button></form>{% endif %}
+      {% else %}
+        <a class="btn sec sm" href="{{ url_for('activity_detail', aid=a.activity_id) }}">เช็คชื่อ/จัดการ</a>
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

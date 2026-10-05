@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}ประวัติของฉัน{% endblock %}
+{% block body %}
+<h1>🏅 ประวัติกิจกรรมของ {{ me.first_name }} {{ me.last_name }} <span class="mute" style="font-size:16px">ชั้น {{ me.grade }}/{{ me.room }}</span></h1>
+<div class="grid g4" style="margin-bottom:18px">
+  <div class="stat"><div class="ic">🎉</div><div><b>{{ tot.n }}</b><span>กิจกรรมที่เข้าร่วม</span></div></div>
+  <div class="stat"><div class="ic">⏱️</div><div><b>{{ tot.h }}</b><span>ชั่วโมงสะสม</span></div></div>
+  <div class="stat"><div class="ic">⭐</div><div><b>{{ tot.sc }}</b><span>คะแนนจิตพิสัยสะสม</span></div></div>
+</div>
+<div class="card tw"><table>
+  <tr><th>กิจกรรม</th><th>ประเภท</th><th>วันที่</th><th>สถานะลงทะเบียน</th><th>ผลการเข้าร่วม</th><th>คะแนน</th><th>ชั่วโมงที่ได้</th><th></th></tr>
+  {% for r in rows %}<tr>
+    <td><a href="{{ url_for('activity_detail', aid=r.activity_id) }}">{{ r.activity_name }}</a></td>
+    <td>{{ r.type_name }}</td><td>{{ r.activity_date }}</td>
+    <td><span class="tag {{ r.reg_status }}">{{ 'ลงทะเบียนแล้ว' if r.reg_status == 'registered' else 'ยกเลิก' }}</span></td>
+    <td>{% if r.attend_status %}<span class="tag {{ r.attend_status }}">{{ ATTEND_LABEL[r.attend_status] }}</span>{% else %}<span class="mute">รอเช็คชื่อ</span>{% endif %}</td>
+    <td>{{ r.score if r.score is not none else '-' }}</td><td>{{ r.hours_earned if r.hours_earned is not none else '-' }}</td>
+    <td>{% if r.reg_status == 'registered' and not r.attend_status %}<form class="inline" method="post" action="{{ url_for('cancel', aid=r.activity_id) }}"><button class="btn red sm">ยกเลิก</button></form>{% endif %}</td>
+  </tr>{% else %}<tr><td colspan="8" class="empty"><b>🎒</b>ยังไม่เคยลงทะเบียนกิจกรรม</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

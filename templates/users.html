@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}ผู้ใช้/สิทธิ์{% endblock %}
+{% block body %}
+<h1>🔑 จัดการผู้ใช้และสิทธิ์</h1>
+<form class="card form" method="post">
+  <div><label>ชื่อผู้ใช้</label><input name="username" required></div>
+  <div><label>รหัสผ่าน</label><input name="password" required></div>
+  <div><label>สิทธิ์</label><select name="role_id" id="role">{% for r in roles %}<option value="{{ r.role_id }}" data-n="{{ r.role_name }}">{{ r.role_name }}</option>{% endfor %}</select></div>
+  <div id="f-student"><label>ผูกกับนักเรียน (สิทธิ์ student)</label><select name="student_id"><option value="">-</option>{% for s in students %}<option value="{{ s.student_id }}">{{ s.first_name }} {{ s.last_name }}</option>{% endfor %}</select></div>
+  <div id="f-teacher"><label>ผูกกับครู (สิทธิ์ teacher)</label><select name="teacher_id"><option value="">-</option>{% for t in teachers %}<option value="{{ t.teacher_id }}">{{ t.teacher_name }}</option>{% endfor %}</select></div>
+  <div class="full"><button class="btn">+ สร้างบัญชี</button></div>
+</form>
+<div class="card tw"><table>
+  <tr><th>ID</th><th>ชื่อผู้ใช้</th><th>สิทธิ์</th><th>เจ้าของบัญชี</th><th>รีเซ็ตรหัสผ่าน</th><th></th></tr>
+  {% for u in rows %}<tr><td>{{ u.user_id }}</td><td>{{ u.username }}</td><td><span class="tag">{{ u.role_name }}</span></td><td>{{ u.owner }}</td>
+    <td><form class="inline row" method="post" action="{{ url_for('user_reset', uid=u.user_id) }}"><input name="password" placeholder="รหัสใหม่" required style="width:110px"><button class="btn sec sm">เปลี่ยน</button></form></td>
+    <td class="right"><form class="inline" method="post" action="{{ url_for('user_delete', uid=u.user_id) }}" onsubmit="return confirm('ลบบัญชีนี้?')"><button class="btn red sm">ลบ</button></form></td></tr>{% endfor %}
+</table></div>
+<script>
+const role = document.getElementById('role');
+function sync(){const n = role.selectedOptions[0].dataset.n;
+  document.getElementById('f-student').style.display = n==='student'?'':'none';
+  document.getElementById('f-teacher').style.display = n==='teacher'?'':'none';}
+role.onchange = sync; sync();
+</script>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}{{ a.activity_name }}{% endblock %}
+{% block body %}
+<div class="row" style="justify-content:space-between">
+  <h1>📌 {{ a.activity_name }}</h1>
+  <div class="row">
+    {% if manage %}<a class="btn sec" href="{{ url_for('activity_edit', aid=a.activity_id) }}">แก้ไข</a>
+    <form class="inline" method="post" action="{{ url_for('activity_delete', aid=a.activity_id) }}" onsubmit="return confirm('ลบกิจกรรมนี้และข้อมูลการลงทะเบียนทั้งหมด?')"><button class="btn red">ลบ</button></form>{% endif %}
+    {% if g.user.role_name == 'student' %}
+      {% if my_reg and my_reg.reg_status == 'registered' %}<form class="inline" method="post" action="{{ url_for('cancel', aid=a.activity_id) }}"><button class="btn red">ยกเลิกลงทะเบียน</button></form>
+      {% else %}<form class="inline" method="post" action="{{ url_for('register', aid=a.activity_id) }}"><button class="btn">ลงทะเบียน</button></form>{% endif %}
+    {% endif %}
+  </div>
+</div>
+<div class="card">
+  <div class="info">
+    <div><span class="mute">ประเภท</span><br><span class="tag">{{ a.type_name }}</span></div>
+    <div><span class="mute">ปีการศึกษา</span><br>{{ a.year_name }} / ภาค {{ a.semester }}</div>
+    <div><span class="mute">วันที่</span><br>{{ a.activity_date }} ({{ a.start_time }}–{{ a.end_time }})</div>
+    <div><span class="mute">สถานที่</span><br>{{ a.location }}</div>
+    <div><span class="mute">ชั่วโมงกิจกรรม</span><br>{{ a.hours }}</div>
+    <div><span class="mute">ผู้ลงทะเบียน</span><br>{{ a.joined }} / {{ a.max_participants }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>👩‍🏫 ครูผู้ดูแลกิจกรรม</h2>
+  <table><tr><th>ครู</th><th>หมวดวิชา</th><th>โทรศัพท์</th><th>หน้าที่</th><th></th></tr>
+  {% for t in teachers %}<tr><td>{{ t.teacher_name }}</td><td>{{ t.department }}</td><td>{{ t.phone }}</td><td>{{ t.duty }}</td>
+    <td class="right">{% if manage %}<form class="inline" method="post" action="{{ url_for('activity_teacher_remove', aid=a.activity_id, tid=t.teacher_id) }}"><button class="btn red sm">นำออก</button></form>{% endif %}</td></tr>
+  {% else %}<tr><td colspan="5" class="mute">ยังไม่มีครูผู้ดูแล</td></tr>{% endfor %}</table>
+  {% if manage %}
+  <form class="bar" method="post" action="{{ url_for('activity_teacher_add', aid=a.activity_id) }}" style="margin:12px 0 0">
+    <div><label>เพิ่ม/แก้หน้าที่ครู</label><select name="teacher_id">{% for t in all_teachers %}<option value="{{ t.teacher_id }}">{{ t.teacher_name }}</option>{% endfor %}</select></div>
+    <div><label>หน้าที่</label><input name="duty" placeholder="เช่น ดูแลนักเรียน"></div>
+    <button class="btn sec">บันทึก</button>
+  </form>{% endif %}
+</div>
+
+<div class="card">
+  <h2>🧑‍🎓 รายชื่อผู้เข้าร่วม ({{ people|length }} คน)</h2>
+  {% if manage %}
+  <form method="post" action="{{ url_for('attendance_save', aid=a.activity_id) }}">
+  <div class="tw"><table>
+    <tr><th>นักเรียน</th><th>ชั้น</th><th>เวลาเช็คอิน</th><th>สถานะ</th><th>คะแนน</th><th>ชั่วโมง</th><th>หมายเหตุ</th><th></th></tr>
+    {% for p in people %}{% set k = p.reg_id %}
+    <tr>
+      <td>{{ p.first_name }} {{ p.last_name }}</td><td>{{ p.grade }}/{{ p.room }}</td><td>{{ p.check_in_time or '-' }}</td>
+      <td><select name="status_{{ k }}">{% for v, l in ATTEND_LABEL.items() %}<option value="{{ v }}" {{ 'selected' if (p.attend_status or 'absent') == v }}>{{ l }}</option>{% endfor %}</select></td>
+      <td><input type="number" step="0.5" min="0" name="score_{{ k }}" value="{{ p.score or 0 }}"></td>
+      <td><input type="number" step="0.5" min="0" name="hours_{{ k }}" value="{{ p.hours_earned if p.hours_earned is not none else '' }}" placeholder="อัตโนมัติ"></td>
+      <td><input type="text" name="comment_{{ k }}" value="{{ p.comment or '' }}"></td>
+      <td><button class="btn sm ok" formaction="{{ url_for('quick_checkin', aid=a.activity_id, reg_id=k) }}">✔ เช็คชื่อ</button></td>
+    </tr>
+    {% else %}<tr><td colspan="8" class="mute">ยังไม่มีผู้ลงทะเบียน</td></tr>{% endfor %}
+  </table></div>
+  {% if people %}<p><button class="btn lg">💾 บันทึกผลทั้งหมด</button>
+  <span class="mute" style="font-size:13px">เว้นช่องชั่วโมงว่าง = ระบบให้ชั่วโมงตามกิจกรรมอัตโนมัติ เมื่อสถานะเป็น มา/สาย</span></p>{% endif %}
+  </form>
+  {% else %}
+  <table><tr><th>นักเรียน</th><th>ชั้น</th><th>สถานะ</th></tr>
+    {% for p in people %}<tr><td>{{ p.first_name }} {{ p.last_name }}</td><td>{{ p.grade }}/{{ p.room }}</td>
+    <td>{% if p.attend_status %}<span class="tag {{ p.attend_status }}">{{ ATTEND_LABEL[p.attend_status] }}</span>{% else %}<span class="mute">ยังไม่เช็คชื่อ</span>{% endif %}</td></tr>
+    {% else %}<tr><td colspan="3" class="mute">ยังไม่มีผู้ลงทะเบียน</td></tr>{% endfor %}</table>
+  {% endif %}
+</div>
+{% endblock %}

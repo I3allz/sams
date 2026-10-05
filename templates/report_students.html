@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}รายงานนักเรียน{% endblock %}
+{% block body %}
+<div class="row" style="justify-content:space-between"><h1>🎯 รายงานคะแนน/ชั่วโมงกิจกรรมสะสมของนักเรียน</h1><button class="btn sec" onclick="window.print()">🖨️ พิมพ์</button></div>
+<form class="bar" method="get"><div><label>ชั้น</label><select name="grade" onchange="this.form.submit()">
+  <option value="">ทั้งหมด</option>{% for g_ in grades %}<option {{ 'selected' if g_.grade == grade }}>{{ g_.grade }}</option>{% endfor %}</select></div></form>
+<div class="card tw"><table>
+  <tr><th>#</th><th>นักเรียน</th><th>ชั้น/ห้อง</th><th>กิจกรรมที่เข้าร่วม</th><th>ชั่วโมงสะสม</th><th>คะแนนสะสม</th></tr>
+  {% for r in rows %}<tr><td>{{ loop.index }}</td><td>{{ r.first_name }} {{ r.last_name }}</td><td>{{ r.grade }}/{{ r.room }}</td>
+  <td>{{ r.joined }}</td><td><b>{{ r.hours }}</b></td><td>{{ r.score }}</td></tr>{% endfor %}
+</table></div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}{{ m.title }}{% endblock %}
+{% block body %}
+<h1>⚙️ จัดการ{{ m.title }}</h1>
+<form class="card form" method="post">
+  {% if edit %}<input type="hidden" name="pk" value="{{ edit[m.pk] }}">{% endif %}
+  {% for col, label, typ in m.fields %}
+  <div><label>{{ label }}</label><input type="{{ typ }}" name="{{ col }}" required value="{{ edit[col] if edit else '' }}"></div>
+  {% endfor %}
+  <div class="full row"><button class="btn">{{ 'บันทึกการแก้ไข' if edit else '+ เพิ่ม' }}</button>
+  {% if edit %}<a class="btn sec" href="{{ url_for('master', kind=kind) }}">ยกเลิก</a>{% endif %}</div>
+</form>
+<div class="card tw"><table>
+  <tr><th>รหัส</th>{% for col, label, typ in m.fields %}<th>{{ label }}</th>{% endfor %}<th></th></tr>
+  {% for r in rows %}<tr><td>{{ r[m.pk] }}</td>{% for col, label, typ in m.fields %}<td>{{ r[col] }}</td>{% endfor %}
+    <td class="right"><a class="btn sec sm" href="{{ url_for('master', kind=kind, edit=r[m.pk]) }}">แก้ไข</a>
+    <form class="inline" method="post" action="{{ url_for('master_delete', kind=kind, pk=r[m.pk]) }}" onsubmit="return confirm('ลบรายการนี้?')"><button class="btn red sm">ลบ</button></form></td></tr>{% endfor %}
+</table></div>
+{% endblock %}
